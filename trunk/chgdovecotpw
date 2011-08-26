@@ -23,9 +23,9 @@
    OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-   REQUIREMENTS:
+   REQUIRES:
    
-   - Requires PHP getopt() function which implies PHP version 5.3.0 or higher
+   - PHP getopt() function which implies PHP version 5.3.0 or higher
    - dovecotpw (normally bundled with dovecot itself and is required by this script to generate a Dovecot compliant password hash)
    
    $v 1.0 (2011-08-26)
