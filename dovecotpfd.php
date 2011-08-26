@@ -3,7 +3,7 @@
 /**
 * Dovecot Password File Driver (dovecotpfd)
 *
-* Driver that adds functionality to change a users Dovecot password when stored in a passwd/userdb file (http://wiki.dovecot.org/AuthDatabase/PasswdFile)
+  * Roundcube password plugin driver that adds functionality to change a user passwords stored in Dovecot passwd/userdb files (see: http://wiki.dovecot.org/AuthDatabase/PasswdFile)
 *
 * SCRIPT REQUIREMENTS:
 *
