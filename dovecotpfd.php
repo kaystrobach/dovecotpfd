@@ -3,24 +3,41 @@
 /**
 * Dovecot Password File Driver (dovecotpfd)
 *
-* Roundcube password plugin driver that adds functionality to change a user passwords stored in Dovecot passwd/userdb files (see: http://wiki.dovecot.org/AuthDatabase/PasswdFile)
+* Roundcube password plugin driver that adds functionality to change passwords stored in
+* Dovecot passwd/userdb files (see: http://wiki.dovecot.org/AuthDatabase/PasswdFile)
+*
+* Copyright (C) 2011, Charlie Orford
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License version 2
+* as published by the Free Software Foundation.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License along
+* with this program; if not, write to the Free Software Foundation, Inc.,
+* 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.     
+*
 *
 * SCRIPT REQUIREMENTS:
 *
-*    - PHP 5.3.0 or higher, shell access and the ability to run php scripts from the CLI
+*  - PHP 5.3.0 or higher, shell access and the ability to run php scripts from the CLI
 *
-*    - chgdovecotpw and dovecotpfd-setuid.c (these two files should have been bundled with this driver)
+*  - chgdovecotpw and dovecotpfd-setuid.c (these two files should have been bundled with this driver)
 *
-*    - dovecotpfd-setuid.c must be compiled and the resulting dovecotpfd-setuid binary placed in the same directory
-*      as this script (see dovecotpfd-setuid.c source for compilation instructions, security info and options)
+*  - dovecotpfd-setuid.c must be compiled and the resulting dovecotpfd-setuid binary placed in the same directory
+*    as this script (see dovecotpfd-setuid.c source for compilation instructions, security info and options)
 *
-*    - chgdovecotpw must be placed in a location where dovecotpfd-setuid can access it once it has changed UID (normally /usr/sbin is a good choice)
+*  - chgdovecotpw must be placed in a location where dovecotpfd-setuid can access it once it has changed UID (normally /usr/sbin is a good choice)
 *
-*    - chgdovecotpw should only be executable by the user dovecotpfd-setuid changes UID to
+*  - chgdovecotpw should only be executable by the user dovecotpfd-setuid changes UID to
 *
-*    - the dovecot passwd/userdb file must be accessible and writable by the same user dovecotpfd-setuid changes UID to
+*  - the dovecot passwd/userdb file must be accessible and writable by the same user dovecotpfd-setuid changes UID to
 *
-*    - dovecotpw (usually packaged with dovecot itself and found in /usr/sbin) must be available and executable by chgdovecotpw
+*  - dovecotpw (usually packaged with dovecot itself and found in /usr/sbin) must be available and executable by chgdovecotpw
 *
 *
 * @version 1.0 (2011-08-26)
