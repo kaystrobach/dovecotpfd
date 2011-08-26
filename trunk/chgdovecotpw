@@ -1,0 +1,256 @@
+#!/var/lib/php/5.3.6/base/bin/php -q
+<?php
+
+/*
+// ================================================================================
+   
+   chgdovecotpw (http://code.google.com/p/dovecotpfd/)
+   
+   A PHP CLI script to change user passwords stored in Dovecot passwd/userdb files (see: http://wiki.dovecot.org/AuthDatabase/PasswdFile)
+   
+   Copyright (c) 2011 Charlie Orford
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
+   files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use,
+   copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom
+   the Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+   OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+   BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+   OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+   REQUIREMENTS:
+   
+   - Requires PHP getopt() function which implies PHP version 5.3.0 or higher
+   - dovecotpw (normally bundled with dovecot itself and is required by this script to generate a Dovecot compliant password hash)
+   
+   $v 1.0 (2011-08-26)
+   
+// ================================================================================
+*/
+
+
+
+/*
+-----------------------------------------------------------------
+DEFINE SCRIPT CONSTANTS
+-----------------------------------------------------------------
+*/
+
+// Path to dovecotpw
+define("DOVECOTPW", "/usr/sbin/dovecotpw");
+
+// Messages
+define("MSG_CLI_ERROR", "This script must be run from the CLI. Exiting." . PHP_EOL);
+define("MSG_GETOPT_ERROR", "PHP getopt() function not available. Exiting." . PHP_EOL);
+define("MSG_MISSING_ARGS", "Unknown or missing arguments. Type -h for help." . PHP_EOL);
+define("MSG_USAGE", "Usage: dovecotpw-change -f=/path/to/passwdfile -u=user -s=scheme -p=new_password" . PHP_EOL);
+define("MSG_FILE_ERROR", "Error updating password file. Please check file exists and this script has permission to read and write to it." . PHP_EOL);
+define("MSG_FILE_PARSE_ERROR", "Error updating password file. The file does not appear to be in the correct format (see: http://wiki.dovecot.org/AuthDatabase/PasswdFile for expected format)." . PHP_EOL);
+define("MSG_USER_NOT_FOUND", "Error updating password file. No matching user was found." . PHP_EOL);
+define("MSG_LOCK_FAIL", "Unable to lock password file ahead of update. Exiting." . PHP_EOL);
+define("MSG_DOVECOTPW_ERROR", "Error calling dovecotpw. Please check dovecotpw exists and this script has permission to execute it." . PHP_EOL);
+define("MSG_DOVECOTPW_RESPONSE", "Dovecotpw returned the following error:" . PHP_EOL);
+define("MSG_SUCCESS", "Password file successfully updated." . PHP_EOL);
+
+
+
+/*
+-----------------------------------------------------------------
+SCRIPT LOGIC BEGINS AFTER THIS COMMENT BLOCK
+-----------------------------------------------------------------
+*/
+
+function check_compatability() {
+
+	// Check we were called from the CLI
+	if (!(php_sapi_name() == "cli")) {
+
+		printf("%s", MSG_CLI_ERROR);
+		exit(1);
+
+	}
+
+	// Check getopt() is available
+	if (!(function_exists("getopt"))) {
+
+		printf("%s", MSG_GETOPT_ERROR);
+		exit(1);
+
+	}
+
+}
+
+function get_hash($dovecotpw, $user, $scheme="SSHA", $new_password) {
+
+	// Build dovecotpw command
+	$exec_cmd = sprintf("%s -u %s -s %s -p \"%s\" 2>&1", escapeshellcmd($dovecotpw), escapeshellcmd($user), escapeshellcmd($scheme), escapeshellcmd($new_password));
+		
+	// Try to call dovecotpw
+	if ($ph = @popen($exec_cmd, "r")) {
+		
+		$response = "";
+		while (!feof($ph))
+			$response .= fread($ph, 8192);
+		
+		// Success - return hash
+		if (pclose($ph) == 0)
+			return trim($response);
+		
+		// Failure - exit
+		printf("%s%s", MSG_DOVECOTPW_RESPONSE, $response);
+		exit(1);
+		
+	// Problem calling dovecotpw
+	} else {
+		
+		printf("%s", MSG_DOVECOTPW_ERROR);
+		exit(1);
+
+	}
+	
+}
+
+function update_password_file($password_file, $user, $new_password_hash) {
+	
+	if ((@is_readable($password_file)) && (@is_writeable($password_file)) && ($fh = @fopen($password_file, "r+b"))) {						
+		
+		// Try to get an exlclusive lock (if we can't get a lock, we exit rather than wait blocking)
+		if (flock($fh, LOCK_EX|LOCK_NB)) {
+			
+			// Loop through and store contents of $password_file, updating the password for the first user line that matches $user
+			$output = "";
+			$found_match = false;
+
+			while (!(feof($fh)))  { 
+				
+				$line = fgets($fh);
+				$data = explode(":", $line, 3);
+
+				if (is_array($data)) {
+					
+					if ($data[0] == $user) {
+						
+						$data[1] = $new_password_hash;
+						$found_match = true;
+
+					}
+
+					$newline = "";
+
+					foreach($data as $value)
+						$newline .= sprintf("%s:", $value);
+
+					$newline = substr($newline, 0, strlen($newline)-1);
+					$output .= $newline;
+
+				} else {
+
+					printf("%s", MSG_FILE_PARSE_ERROR);
+					exit(1);
+
+				}
+
+			} 
+
+			// If no matching $user was found, issue alert and exit
+			if (!($found_match)) {
+
+				printf("%s", MSG_USER_NOT_FOUND);
+				exit(1);
+
+			}
+			
+			// Write changes back to $password_file
+			((rewind($fh)) && (ftruncate($fh, 0)) && (!(fwrite($fh, $output) === false))) ? $retval = true : $retval = false;
+			
+			// Cleanup and return
+			flock($fh, LOCK_UN);
+			fclose($fh);
+
+			return $retval;
+		
+		// Locking failed
+		} else {
+		
+			printf("%s", MSG_LOCK_FAIL);
+			exit(1);
+			
+		}
+	
+	// Insufficient permissions or other error encountered while trying to open password file
+	} else {
+
+		printf("%s", MSG_FILE_ERROR);
+		exit(1);
+
+	}
+	
+}
+
+
+
+/*
+-----------------------------------------------------------------
+EXECUTION START POINT BEGINS AFTER THIS COMMENT BLOCK
+-----------------------------------------------------------------
+*/
+
+// Check we were called from the CLI and that getopt() is available
+check_compatability();
+
+// Check we have been called with the correct number of arguments
+if (($argc == 5)) {
+	
+	// Parse command line options
+	$options = getopt("f:u:s:p:");
+
+	// Check we have the expected number of options
+	if (count($options) == 4) {
+		
+		// Store command line options
+		$password_file = realpath($options["f"]);
+		$user = $options["u"];
+		$scheme = $options["s"];
+		$new_password = $options["p"];
+
+		// Hash the password
+		$new_password_hash = get_hash(DOVECOTPW, $user, $scheme, $new_password);
+
+		// Update password file with the new hash
+		if (update_password_file($password_file, $user, $new_password_hash)) {
+
+			printf("%s", MSG_SUCCESS);
+			exit(0);
+
+		} else {
+
+			printf("%s", MSG_FILE_ERROR);
+			exit(1);
+
+		}	
+
+	 } else {
+
+	 	printf("%s", MSG_MISSING_ARGS);
+	 	exit(1);
+
+	 }
+
+} elseif (($argc == 2) && (in_array($argv[1], array('--help', '-help', '-h', '-?')))) {
+
+	printf("%s", MSG_USAGE);
+	exit(1);
+
+} else {
+
+	printf("%s", MSG_MISSING_ARGS);
+	exit(1);
+
+}
+
+?>
