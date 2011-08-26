@@ -56,7 +56,7 @@ function password_save($currpass, $newpass)
 			'code' => 600,
 			'type' => 'php',
 			'file' => __FILE__, 'line' => __LINE__,
-			'message' => "Password plugin: $currdir/dovecotpfd-setuid returned the following error: $response"
+			'message' => "Password plugin: $currdir/dovecotpfd-setuid returned an error"
 			), true, false);
 		
 		return PASSWORD_ERROR;
