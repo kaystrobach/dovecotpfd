@@ -50,17 +50,11 @@ chmod 4750 dovecotpfd-setuid
 main(int argc, char *argv[])
 {
 
-	int rc,cc;
+        if (!((setuid(UID) == 0) && (execv(CMD, argv) == 0))) {
+                return 1;
+        }
 
-	cc = setuid(UID);
-	rc = execv(CMD, argv);
-
-	if ((rc != 0) || (cc != 0))
-	{
-		fprintf(stderr, "__ %s:  failed %d  %d\n", argv[0], rc, cc);
-		return 1;
-	}
-
-	return 0;
+        return 0;
 
 }
+
