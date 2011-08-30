@@ -42,7 +42,7 @@ chmod 4750 dovecotpfd-setuid
 // Instead, create a new user, specify the uid of this new user here and then make this user the owner
 // of the dovecot passwd/userdb file and the chgdovecotpw script. This user should be the only one who
 // can execute the chgdovecotpw script and write to the dovecot passwd/userdb file.
-#define UID 1003
+#define UID 1000
 
 // Set path to chgdovecotpw (which you would normally place in /usr/sbin)
 #define CMD "/usr/sbin/chgdovecotpw"
