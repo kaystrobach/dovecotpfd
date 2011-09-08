@@ -152,7 +152,7 @@ function update_password_file($password_file, $user, $new_password_hash) {
 
 			} 
 
-			// If no password hashes were changed, issue alert and exit
+			// If no password hash was changed, issue warning and exit
 			if (!($hash_updated)) {
 
 				printf("%s", MSG_USER_NOT_FOUND);
