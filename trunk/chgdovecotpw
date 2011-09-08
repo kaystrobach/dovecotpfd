@@ -142,6 +142,10 @@ function update_password_file($password_file, $user, $new_password_hash) {
 					$newline = implode(":", $linedata);
 					$output .= $newline;
 
+				} else {
+
+					$output .= $line;
+               
 				}
 
 			} 
