@@ -20,13 +20,13 @@
    BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
    OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-   $v 1.0.1 (2011-08-30)
+   $v 1.0.2 (2011-09-08)
 
 // ================================================================================
 
 
 INSTRUCTIONS FOR COMPILATION:
-To compile, place dovecotpfd-setuid.c in roundcubedir/plugins/password/drivers and:
+Place dovecotpfd-setuid.c in roundcubedir/plugins/password/drivers and issue the following commands:
 
 gcc -o dovecotpfd-setuid dovecotpfd-setuid.c
 chown root:www-data dovecotpfd-setuid
@@ -38,17 +38,16 @@ chmod 4750 dovecotpfd-setuid
 #include <stdio.h>
 #include <unistd.h>
 
-// Set the UID this script will change user to. For security reasons do not set this to 0 (i.e. root).
-// Instead, create a new user, specify the uid of this new user here and then make this user the owner
-// of the dovecot passwd/userdb file and the chgdovecotpw script. This user should be the only one who
-// can execute the chgdovecotpw script and write to the dovecot passwd/userdb file.
-#define UID 1000
+// Set the UID this script will change user to (defaults to nobody).
+// For security reasons DO NOT set this to 0 (i.e. root). Instead, create a new user, specify the uid of this new user here
+// and then make this user the owner of the dovecot passwd/userdb file and the chgdovecotpw script. This user should be the
+// only one who can execute the chgdovecotpw script and write to the dovecot passwd/userdb file.
+#define UID 65534
 
 // Set path to chgdovecotpw (which you would normally place in /usr/sbin)
 #define CMD "/usr/sbin/chgdovecotpw"
 
-main(int argc, char *argv[])
-{
+main(int argc, char *argv[]) {
 
         if (!((setuid(UID) == 0) && (execv(CMD, argv) == 0))) {
                 return 1;
