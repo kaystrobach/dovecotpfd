@@ -123,8 +123,8 @@ function update_password_file($password_file, $user, $new_password_hash) {
 		if (flock($fh, LOCK_EX|LOCK_NB)) {
 			
 			// Read the file in to memory line by line (updating the password hash of the first user line we find that contains $user)
-			$output = "";
 			$hash_updated = false;
+			$output = "";         
 
 			while (!(feof($fh)))  { 
 				
@@ -140,12 +140,7 @@ function update_password_file($password_file, $user, $new_password_hash) {
 
 					}
 
-					$newline = "";
-
-					foreach($linedata as $data)
-						$newline .= sprintf("%s:", $data);
-
-					$newline = substr($newline, 0, strlen($newline)-1);
+					$newline = implode(":", $linedata);
 					$output .= $newline;
 
 				} else {
