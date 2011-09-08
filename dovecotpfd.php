@@ -53,7 +53,8 @@ function password_save($currpass, $newpass)
 	$username = (rcmail::get_instance()->config->get('password_dovecotpfd_format') == "%n") ? $user : $_SESSION['username'];	
 	$scheme = rcmail::get_instance()->config->get('password_dovecotpfd_scheme');
 	
-  // Set path to dovecot passwd/userdb file (the example below shows how you can support multiple passwd files, one for each domain. If you just use one file, replace sprintf with a simple string of the path to the passwd file) 
+  // Set path to dovecot passwd/userdb file
+  // (the example below shows how you can support multiple passwd files, one for each domain. If you just use one file, replace sprintf with a simple string of the path to the passwd file)
 	$passwdfile = sprintf("/home/mail/%s/passwd", $domain);
 	
 	// Build command to call dovecotpfd-setuid wrapper
@@ -61,7 +62,7 @@ function password_save($currpass, $newpass)
 	
 	// Call wrapper to change password
 	if ($ph = @popen($exec_cmd, "r"))
-  {
+	{
 		
 		$response = "";
 		while (!feof($ph))
