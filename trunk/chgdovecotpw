@@ -142,8 +142,8 @@ function update_password_file($password_file, $user, $new_password_hash) {
 
 					$newline = "";
 
-					foreach($linedata as $value)
-						$newline .= sprintf("%s:", $value);
+					foreach($linedata as $data)
+						$newline .= sprintf("%s:", $data);
 
 					$newline = substr($newline, 0, strlen($newline)-1);
 					$output .= $newline;
