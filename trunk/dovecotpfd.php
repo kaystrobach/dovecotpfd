@@ -40,7 +40,7 @@
 *  - dovecotpw (usually packaged with dovecot itself and found in /usr/sbin) must be available and executable by chgdovecotpw
 *
 *
-* @version 1.0 (2011-08-26)
+* @version 1.1 (2011-09-08)
 * @author Charlie Orford (charlie.orford@attackplan.net)
 **/
 
