@@ -50,7 +50,6 @@ define("MSG_GETOPT_ERROR", "PHP getopt() function not available. Exiting." . PHP
 define("MSG_MISSING_ARGS", "Unknown or missing arguments. Type -h for help." . PHP_EOL);
 define("MSG_USAGE", "Usage: dovecotpw-change -f=/path/to/passwdfile -u=user -s=scheme -p=new_password" . PHP_EOL);
 define("MSG_FILE_ERROR", "Error updating password file. Please check file exists and this script has permission to read and write to it." . PHP_EOL);
-define("MSG_FILE_PARSE_ERROR", "Error updating password file. The file does not appear to be in the correct format (see: http://wiki.dovecot.org/AuthDatabase/PasswdFile for expected format)." . PHP_EOL);
 define("MSG_USER_NOT_FOUND", "Error updating password file. No matching user was found." . PHP_EOL);
 define("MSG_LOCK_FAIL", "Unable to lock password file ahead of update. Exiting." . PHP_EOL);
 define("MSG_DOVECOTPW_ERROR", "Error calling dovecotpw. Please check dovecotpw exists and this script has permission to execute it." . PHP_EOL);
@@ -142,11 +141,6 @@ function update_password_file($password_file, $user, $new_password_hash) {
 
 					$newline = implode(":", $linedata);
 					$output .= $newline;
-
-				} else {
-
-					printf("%s", MSG_FILE_PARSE_ERROR);
-					exit(1);
 
 				}
 
