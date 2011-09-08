@@ -28,7 +28,7 @@
    - PHP getopt() function which implies PHP version 5.3.0 or higher
    - dovecotpw (normally bundled with dovecot itself and is required by this script to generate a Dovecot compliant password hash)
    
-   $v 1.0 (2011-08-26)
+   $v 1.1 (2011-09-08)
    
 // ================================================================================
 */
@@ -44,7 +44,7 @@ DEFINE SCRIPT CONSTANTS
 // Path to dovecotpw
 define("DOVECOTPW", "/usr/sbin/dovecotpw");
 
-// Messages
+// Script messages
 define("MSG_CLI_ERROR", "This script must be run from the CLI. Exiting." . PHP_EOL);
 define("MSG_GETOPT_ERROR", "PHP getopt() function not available. Exiting." . PHP_EOL);
 define("MSG_MISSING_ARGS", "Unknown or missing arguments. Type -h for help." . PHP_EOL);
@@ -119,30 +119,30 @@ function update_password_file($password_file, $user, $new_password_hash) {
 	
 	if ((@is_readable($password_file)) && (@is_writeable($password_file)) && ($fh = @fopen($password_file, "r+b"))) {						
 		
-		// Try to get an exlclusive lock (if we can't get a lock, we exit rather than wait blocking)
+		// Try to get an exlclusive lock on the password file (if we can't get a lock, we exit rather than wait blocking)
 		if (flock($fh, LOCK_EX|LOCK_NB)) {
 			
-			// Loop through and store contents of $password_file, updating the password for the first user line that matches $user
+			// Read the file in to memory line by line (updating the password hash of the first user line we find that contains $user)
 			$output = "";
-			$found_match = false;
+			$hash_updated = false;
 
 			while (!(feof($fh)))  { 
 				
 				$line = fgets($fh);
-				$data = explode(":", $line, 3);
+				$linedata = explode(":", $line, 3);
 
-				if (is_array($data)) {
+				if ((is_array($linedata)) && (count($linedata) > 1)) {
 					
-					if ($data[0] == $user) {
+					if ($linedata[0] == $user) {
 						
-						$data[1] = $new_password_hash;
-						$found_match = true;
+						$linedata[1] = $new_password_hash;
+						$hash_updated = true;
 
 					}
 
 					$newline = "";
 
-					foreach($data as $value)
+					foreach($linedata as $value)
 						$newline .= sprintf("%s:", $value);
 
 					$newline = substr($newline, 0, strlen($newline)-1);
@@ -157,15 +157,15 @@ function update_password_file($password_file, $user, $new_password_hash) {
 
 			} 
 
-			// If no matching $user was found, issue alert and exit
-			if (!($found_match)) {
+			// If no password hashes were changed, issue alert and exit
+			if (!($hash_updated)) {
 
 				printf("%s", MSG_USER_NOT_FOUND);
 				exit(1);
 
 			}
 			
-			// Write changes back to $password_file
+			// Overwrite password file with new contents
 			((rewind($fh)) && (ftruncate($fh, 0)) && (!(fwrite($fh, $output) === false))) ? $retval = true : $retval = false;
 			
 			// Cleanup and return
@@ -218,10 +218,10 @@ if (($argc == 5)) {
 		$scheme = $options["s"];
 		$new_password = $options["p"];
 
-		// Hash the password
+		// Hash the new password
 		$new_password_hash = get_hash(DOVECOTPW, $user, $scheme, $new_password);
 
-		// Update password file with the new hash
+		// Update password file with new hash
 		if (update_password_file($password_file, $user, $new_password_hash)) {
 
 			printf("%s", MSG_SUCCESS);
