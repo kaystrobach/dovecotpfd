@@ -122,7 +122,7 @@ function update_password_file($password_file, $user, $new_password_hash) {
 		// Try to get an exlclusive lock on the password file (if we can't get a lock, we exit rather than wait blocking)
 		if (flock($fh, LOCK_EX|LOCK_NB)) {
 			
-			// Read the file in to memory line by line (updating the password hash of the first user line we find that contains $user)
+			// Read the file in to memory line by line (updating the password hash of the first line we find that contains $user)
 			$hash_updated = false;
 			$output = "";         
 
